@@ -1,0 +1,32 @@
+/* FullCalendar Styles */
+.fc {
+    width: 100% !important;   /* Ensure full width */
+    height: 100% !important;  /* Ensure full height */
+    min-height: 600px;        /* Minimum height for the calendar */
+    box-sizing: border-box;   /* Prevent overflow */
+  }
+  
+  /* Main Layout Fix */
+  main {
+    display: flex;
+    justify-content: center;  /* Center the calendar */
+    align-items: center;      /* Center vertically */
+    height: 100vh;            /* Ensure the page takes up full height */
+    padding: 2rem;
+  }
+  
+  @media (min-width: 1024px) {
+    #app {
+      display: block;  /* Use block to avoid grid splitting the space */
+      padding: 0 2rem;  /* Adjust padding for better spacing */
+      max-width: 1280px;
+      margin: 0 auto;  /* Center the app horizontally */
+    }
+  }
+  
+  @media (max-width: 1024px) {
+    main {
+      padding: 1rem; /* Adjust padding on smaller screens */
+    }
+  }
+  
