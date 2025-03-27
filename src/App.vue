@@ -1,10 +1,12 @@
 <script setup>
 import Calendar from './components/Calendar.vue';
+import DocxUploader from './components/DocxUploader.vue';
 </script>
 
 <template>
   <main>
     <Calendar />
+    <DocxUploader />
   </main>
 </template>
 
@@ -21,6 +23,7 @@ import Calendar from './components/Calendar.vue';
     flex-direction: column;  /* Ensure items stack vertically */
   }
 }
+
 .fc {
   width: 100%;
   max-width: 100%;
