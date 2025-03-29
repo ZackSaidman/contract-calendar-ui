@@ -5,8 +5,8 @@ import DocxUploader from './components/DocxUploader.vue';
 
 <template>
   <main>
-    <Calendar />
     <DocxUploader />
+    <Calendar />
   </main>
 </template>
 
