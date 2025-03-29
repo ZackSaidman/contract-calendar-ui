@@ -61,21 +61,16 @@ const handleFileUpload = async (event) => {
 
     // Initialize an array to store extracted table data
     const tableData = [];
-    
-    const rows = table['w:tr'];  // Rows are 'w:tr'
-
-    // Log the rows to check the structure
-    console.log('Table Rows:', rows);
+    const rows = table['w:tr'];
 
     // Process rows to find the "Title" and "Date" headers in the first row
     let headersFound = false;
-    
-    rows.forEach((row, rowIndex) => {
-      const cells = row['w:tc']; // Cells are 'w:tc'
 
+    rows.forEach((row, rowIndex) => {
+      const cells = row['w:tc'];
       const rowData = cells.map((cell) => {
         const text = cell['w:p']?.['w:r']?.['w:t'];
-        return text ? text.trim() : '';  // Return empty string if no text is found
+        return text ? text.trim() : '';
       });
 
       // Log rowData for debugging
@@ -122,8 +117,9 @@ const handleFileUpload = async (event) => {
       Key: fileKey,
       Body: file,
       ContentType: file.type,
-      ACL: 'private', // Secure by default
+      ACL: 'private',
     }).promise();
+
     console.log('File uploaded to S3:', fileKey);
 
     // Log to DynamoDB for each entry
@@ -147,24 +143,32 @@ const handleFileUpload = async (event) => {
 </script>
 
 <style scoped>
+/* Upload button container positioned at the top but not fixed */
 .upload-container {
-  margin-top: 20px;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;
+  width: 100%;
+  margin-top: 20px; /* Adds space from the top of the page */
+  margin-bottom: 20px; /* Adds spacing below */
 }
 
+/* Upload button styling */
 .upload-button {
-  display: inline-block;
-  padding: 10px 20px;
+  padding: 12px 24px;
   background-color: #42b983;
   color: white;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 16px;
 }
 
 .upload-button:hover {
   background-color: #36976d;
 }
 
+/* Disabled upload button when loading */
 .is-loading {
   background-color: #999;
   cursor: not-allowed;
