@@ -5,15 +5,17 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 
-// Access your AWS credentials and region from environment variables
+// AWS Config
 const region = import.meta.env.VITE_AWS_REGION;
 const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
 const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
 
 // Create a reference for the events
 const events = ref([]);
+const selectedEvents = ref([]); // Stores events for the clicked date
+const selectedDate = ref(null); // Stores the selected date
 
-// Initialize DynamoDB Client with direct credentials from environment variables
+// Initialize DynamoDB Client
 const dynamoClient = new DynamoDBClient({
   region,
   credentials: {
@@ -24,7 +26,8 @@ const dynamoClient = new DynamoDBClient({
 
 // Handle date click event
 const handleDateClick = (arg) => {
-  alert('date click! ' + arg.dateStr);
+  selectedDate.value = arg.dateStr; // Store selected date
+  selectedEvents.value = events.value.filter(event => event.date === arg.dateStr);
 };
 
 // Fetch events from DynamoDB
@@ -39,17 +42,15 @@ const fetchEventsFromDynamoDB = async () => {
     // Check if Items are returned and safely map the attributes
     if (data.Items) {
       data.Items.forEach(item => {
-        const tableData = item.tableData?.L || []; // Safely access tableData if it exists
+        const tableData = item.tableData?.L || [];
         tableData.forEach(event => {
           // Push each event object to the events array
-          console.log(event)
           events.value.push({
             title: event.M.title?.S,
-            date: event.M.date?.S
+            date: event.M.date?.S,
           });
         });
       });
-      console.log(events)
     } else {
       console.error('No items found in DynamoDB response');
     }
@@ -74,5 +75,29 @@ const calendarOptions = {
 </script>
 
 <template>
-  <FullCalendar :options="calendarOptions" />
+  <div>
+    <FullCalendar :options="calendarOptions" />
+    
+    <!-- Event Box -->
+    <div v-if="selectedDate" class="event-box">
+      <h3>Events on {{ selectedDate }}</h3>
+      <ul v-if="selectedEvents.length">
+        <li v-for="(event, index) in selectedEvents" :key="index">
+          {{ event.title }}
+        </li>
+      </ul>
+      <p v-else>No events for this date.</p>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.event-box {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+</style>
