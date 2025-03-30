@@ -7,6 +7,7 @@ import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import EventPopup from './EventPopup.vue'; // Import EventPopup component
 import DocumentEditor from './DocumentEditor.vue';
+import Modal from './Modal.vue';
 
 // AWS Config
 const region = import.meta.env.VITE_AWS_REGION;
@@ -21,6 +22,7 @@ const selectedEvent = ref(null); // Stores the selected event for the popup
 const popupVisible = ref(false); // Control visibility of the popup
 const selectedFile = ref(null);  // To store the fetched DOCX file
 const selectedDocumentId = ref(null); // To store document Id
+const isModalVisible = ref(false); // Controls whether the modal is visible
 
 // Initialize the S3 client
 const s3Client = new S3Client({
@@ -100,7 +102,7 @@ const openDocumentEditor = async (docxLink) => {
       const fileBlob = await streamToBlob(fileStream);  // Convert the ReadableStream to a Blob
 
       // Create a new File object from the Blob (with a filename and MIME type)
-      const file = new File([fileBlob], 'document.docx', { 
+      const file = new File([fileBlob], selectedDocumentId.value, { 
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
       });
 
@@ -112,7 +114,7 @@ const openDocumentEditor = async (docxLink) => {
       const fileBlob = await streamToBlob(fileStream);
       
       // Create a new File object from the Blob (with a filename and MIME type)
-      const file = new File([fileBlob], 'document.docx', { 
+      const file = new File([fileBlob], selectedDocumentId.value, { 
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
       });
 
@@ -120,6 +122,9 @@ const openDocumentEditor = async (docxLink) => {
       selectedFile.value = file;
       console.log('File successfully downloaded and saved as a File object:', file);
     }
+
+    // Show the modal once the file is ready
+    isModalVisible.value = true;
   } catch (error) {
     console.error('Error downloading the DOCX file from S3:', error);
   }
@@ -173,6 +178,12 @@ const calendarOptions = {
   eventClick: handleEventClick, // Handle event click to show details in the popup
 };
 
+// Close the modal
+const closeModal = () => {
+  console.log('Closing Modal');
+  isModalVisible.value = false;
+};
+
 // Handle closing the popup
 const closePopup = () => {
   popupVisible.value = false;
@@ -202,12 +213,15 @@ const closePopup = () => {
       @close="closePopup"
     />
 
-    <DocumentEditor 
-      v-if="selectedFile" 
-      :documentId="selectedDocumentId" 
-      :initialData="selectedFile" 
-      :readOnly="true"
-    />
+    <!-- Modal with DocumentEditor inside -->
+    <Modal :isVisible="isModalVisible" @close="closeModal">
+      <DocumentEditor 
+        v-if="selectedFile" 
+        :documentId="selectedDocumentId" 
+        :initialData="selectedFile" 
+        :readOnly="true"
+      />
+    </Modal>
   </div>
 </template>
 
