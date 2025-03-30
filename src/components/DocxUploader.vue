@@ -48,8 +48,6 @@ const handleFileUpload = async (event) => {
       ACL: 'private',
     }).promise();
 
-    console.log('File uploaded to S3:', fileKey);
-
     // Send data to Lambda (via API Gateway) instead of DynamoDB
     const lambdaFunctionURL = import.meta.env.VITE_LAMBDA_URL
 

@@ -26,6 +26,7 @@ const openDocumentEditor = () => {
     <div class="popup-content">
       <h3>{{ props.selectedEvent.title }}</h3>
       <p><strong>Date:</strong> {{ props.selectedEvent.date }}</p>
+      <p><strong>Doc Text:</strong> "{{ props.selectedEvent.text }}"</p>
       <p><strong>Link to DOCX:</strong> 
         <a href="#" @click.prevent="openDocumentEditor">Open DOCX</a>
       </p>

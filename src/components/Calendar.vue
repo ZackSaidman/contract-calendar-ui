@@ -60,6 +60,7 @@ const fetchEventsFromDynamoDB = async () => {
           events.value.push({
             title: item.filename?.S,
             date: event.M.date?.S,
+            text: event.M.text?.S,
             docxLink: item.s3link?.S, // Assuming docxLink contains the link to the file
           });
         });
@@ -78,12 +79,8 @@ const openDocumentEditor = async (docxLink) => {
     
     // Extract bucket and key from the docxLink (assuming the link is an S3 URL)
     const url = new URL(docxLink);
-    console.log('Hostname:', url.hostname);
     const bucketName = url.pathname.split('/')[1];
     const fileKey = url.pathname.split('/').slice(2).join('/');
-
-    console.log('Bucket Name:', bucketName);
-    console.log('File Key:', fileKey);
 
     // Create the GetObject command
     const command = new GetObjectCommand({
@@ -108,7 +105,6 @@ const openDocumentEditor = async (docxLink) => {
 
       // Save the File object in selectedFile
       selectedFile.value = file;
-      console.log('File successfully downloaded and saved as a File object:', file);
     } else {
       // Handle case where Body is a Node.js stream (if this is being run in Node.js)
       const fileBlob = await streamToBlob(fileStream);
@@ -120,7 +116,6 @@ const openDocumentEditor = async (docxLink) => {
 
       // Save the File object in selectedFile
       selectedFile.value = file;
-      console.log('File successfully downloaded and saved as a File object:', file);
     }
 
     // Show the modal once the file is ready
