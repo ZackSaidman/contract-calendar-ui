@@ -45,7 +45,7 @@ const fetchEventsFromDynamoDB = async () => {
           events.value.push({
             title: event.M.title?.S,
             date: event.M.date?.S,
-            docxLink: event.M.s3link?.S, // Assuming docxLink contains the link to the file
+            docxLink: item.s3link?.S, // Assuming docxLink contains the link to the file
           });
         });
       });
