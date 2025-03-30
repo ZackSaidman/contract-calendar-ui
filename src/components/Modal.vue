@@ -5,10 +5,6 @@
             <button class="close-btn" @click="close">Close</button>
         </div>
     </div>
-    <!-- Debugging the modal visibility -->
-    <div v-else class="debug-message">
-        Modal is not visible
-    </div>
 </template>
 
 <script setup>
@@ -61,11 +57,5 @@ const close = () => {
     border-radius: 4px;
     cursor: pointer;
     z-index: 10; /* Ensure it stays above the content */
-}
-
-.debug-message {
-    color: red;
-    text-align: center;
-    font-size: 16px;
 }
 </style>
