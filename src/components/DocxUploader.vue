@@ -8,11 +8,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineEmits } from 'vue';
 import AWS from 'aws-sdk';
 
 // Uploading state for better UX
 const isUploading = ref(false);
+
+const emit = defineEmits(['fileUploaded']);
 
 // AWS Configuration (use environment variables for security)
 AWS.config.update({
@@ -66,6 +68,9 @@ const handleFileUpload = async (event) => {
     if (!response.ok) {
       throw new Error(`Lambda call failed: ${response.statusText}`);
     }
+
+    // Emit event to notify that the file was uploaded successfully
+    emit('fileUploaded');
 
     alert('File successfully uploaded and recorded!');
   } catch (error) {

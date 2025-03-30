@@ -1,12 +1,24 @@
 <script setup>
+import { ref } from 'vue';
 import Calendar from './components/Calendar.vue';
 import DocxUploader from './components/DocxUploader.vue';
+
+// Define a ref to track if the events need to be refreshed
+const refreshCalendar = ref(false);
+
+// Method to handle file upload completion
+const handleFileUploaded = () => {
+  refreshCalendar.value = true; // Trigger a refresh in the calendar
+  setTimeout(() => {
+    refreshCalendar.value = false; // Reset after the refresh
+  }, 100); // Reset the refresh flag after a brief delay
+};
 </script>
 
 <template>
   <main>
-    <DocxUploader />
-    <Calendar />
+    <DocxUploader @fileUploaded="handleFileUploaded" />
+    <Calendar :refresh="refreshCalendar" />
     <br>
     <a href="https://www.flaticon.com/free-icons/rowing" title="rowing icons">Rowing icons created by Freepik - Flaticon</a>
   </main>

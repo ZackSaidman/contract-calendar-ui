@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { defineProps, ref, watch, onMounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -42,9 +42,23 @@ const dynamoClient = new DynamoDBClient({
   },
 });
 
+// Prop for triggering refresh from parent component (App.vue)
+const props = defineProps({
+  refresh: Boolean, // This will be passed from App.vue to trigger the refresh
+});
+
+// Watch for the 'refresh' prop to trigger the fetch of events
+watch(() => props.refresh, (newVal) => {
+  if (newVal) {
+    fetchEventsFromDynamoDB(); // Refresh the events when 'refresh' is true
+  }
+});
+
 // Fetch events from DynamoDB
 const fetchEventsFromDynamoDB = async () => {
   try {
+    const newEvents = [];
+
     const command = new ScanCommand({
       TableName: import.meta.env.VITE_DYNAMO_TABLE_NAME,
     });
@@ -57,7 +71,7 @@ const fetchEventsFromDynamoDB = async () => {
         const tableData = item.tableData?.L || [];
         tableData.forEach(event => {
           // Push each event object to the events array
-          events.value.push({
+          newEvents.push({
             title: item.filename?.S,
             date: event.M.date?.S,
             text: event.M.text?.S,
@@ -65,6 +79,16 @@ const fetchEventsFromDynamoDB = async () => {
           });
         });
       });
+
+      const existingEventKeys = new Set(events.value.map(e => `${e.title}-${e.date}`));
+
+      const uniqueNewEvents = newEvents.filter(e => !existingEventKeys.has(`${e.title}-${e.date}`));
+
+      if (uniqueNewEvents.length > 0) {
+
+        // Efficiently add only unique events
+        events.value.push(...uniqueNewEvents);
+      }
     } else {
       console.error('No items found in DynamoDB response');
     }
