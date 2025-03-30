@@ -7,12 +7,17 @@ const props = defineProps({
   isVisible: Boolean,
 });
 
-// Define emit event to close the popup
-const emit = defineEmits(['close']);
+// Define emit event to close the popup and to open the document editor
+const emit = defineEmits(['close', 'open-document-editor']);
 
 // Close the popup
 const closePopup = () => {
   emit('close');
+};
+
+// Emit the event to open the document editor
+const openDocumentEditor = () => {
+  emit('open-document-editor', props.selectedEvent.docxLink); // Pass the DOCX link
 };
 </script>
 
@@ -21,7 +26,9 @@ const closePopup = () => {
     <div class="popup-content">
       <h3>{{ props.selectedEvent.title }}</h3>
       <p><strong>Date:</strong> {{ props.selectedEvent.date }}</p>
-      <p><strong>Link to DOCX:</strong> <a :href="props.selectedEvent.docxLink" target="_blank">Download DOCX</a></p>
+      <p><strong>Link to DOCX:</strong> 
+        <a href="#" @click.prevent="openDocumentEditor">Open DOCX</a>
+      </p>
       <button @click="closePopup">Close</button>
     </div>
   </div>

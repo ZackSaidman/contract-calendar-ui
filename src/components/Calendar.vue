@@ -4,7 +4,9 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import EventPopup from './EventPopup.vue'; // Import EventPopup component
+import DocumentEditor from './DocumentEditor.vue';
 
 // AWS Config
 const region = import.meta.env.VITE_AWS_REGION;
@@ -17,6 +19,17 @@ const selectedEvents = ref([]); // Stores events for the clicked date
 const selectedDate = ref(null); // Stores the selected date
 const selectedEvent = ref(null); // Stores the selected event for the popup
 const popupVisible = ref(false); // Control visibility of the popup
+const selectedFile = ref(null);  // To store the fetched DOCX file
+const selectedDocumentId = ref(null); // To store document Id
+
+// Initialize the S3 client
+const s3Client = new S3Client({
+  region: region,
+  credentials: {
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
+  }
+});
 
 // Initialize DynamoDB Client
 const dynamoClient = new DynamoDBClient({
@@ -55,6 +68,79 @@ const fetchEventsFromDynamoDB = async () => {
   } catch (error) {
     console.error('Error fetching events from DynamoDB:', error);
   }
+};
+
+const openDocumentEditor = async (docxLink) => {
+  try {
+    selectedDocumentId.value = 'document.docx'
+    
+    // Extract bucket and key from the docxLink (assuming the link is an S3 URL)
+    const url = new URL(docxLink);
+    console.log('Hostname:', url.hostname);
+    const bucketName = url.pathname.split('/')[1];
+    const fileKey = url.pathname.split('/').slice(2).join('/');
+
+    console.log('Bucket Name:', bucketName);
+    console.log('File Key:', fileKey);
+
+    // Create the GetObject command
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+    });
+
+    // Send the command to S3 to get the file
+    const data = await s3Client.send(command);
+
+    // The file's content is in the Body (this is a stream in Node.js or a ReadableStream in the browser)
+    const fileStream = data.Body;
+
+    // If it's a ReadableStream (in the browser)
+    if (fileStream instanceof ReadableStream) {
+      const fileBlob = await streamToBlob(fileStream);  // Convert the ReadableStream to a Blob
+
+      // Create a new File object from the Blob (with a filename and MIME type)
+      const file = new File([fileBlob], 'document.docx', { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+
+      // Save the File object in selectedFile
+      selectedFile.value = file;
+      console.log('File successfully downloaded and saved as a File object:', file);
+    } else {
+      // Handle case where Body is a Node.js stream (if this is being run in Node.js)
+      const fileBlob = await streamToBlob(fileStream);
+      
+      // Create a new File object from the Blob (with a filename and MIME type)
+      const file = new File([fileBlob], 'document.docx', { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+
+      // Save the File object in selectedFile
+      selectedFile.value = file;
+      console.log('File successfully downloaded and saved as a File object:', file);
+    }
+  } catch (error) {
+    console.error('Error downloading the DOCX file from S3:', error);
+  }
+};
+
+// Helper function to convert a stream to a Blob (for browser environment)
+const streamToBlob = (stream) => {
+  return new Promise((resolve, reject) => {
+    const reader = stream.getReader();
+    const chunks = [];
+
+    reader.read().then(function processChunk({ done, value }) {
+      if (done) {
+        resolve(new Blob(chunks));
+        return;
+      }
+
+      chunks.push(value);
+      reader.read().then(processChunk);
+    }).catch(reject);
+  });
 };
 
 // Fetch events on component mount
@@ -112,7 +198,15 @@ const closePopup = () => {
     <EventPopup
       :selectedEvent="selectedEvent"
       :isVisible="popupVisible"
+      @open-document-editor="openDocumentEditor"
       @close="closePopup"
+    />
+
+    <DocumentEditor 
+      v-if="selectedFile" 
+      :documentId="selectedDocumentId" 
+      :initialData="selectedFile" 
+      :readOnly="true"
     />
   </div>
 </template>
