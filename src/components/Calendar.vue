@@ -58,7 +58,7 @@ const fetchEventsFromDynamoDB = async () => {
         tableData.forEach(event => {
           // Push each event object to the events array
           events.value.push({
-            title: event.M.title?.S,
+            title: item.filename?.S,
             date: event.M.date?.S,
             docxLink: item.s3link?.S, // Assuming docxLink contains the link to the file
           });
