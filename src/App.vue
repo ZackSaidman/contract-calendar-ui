@@ -7,6 +7,8 @@ import DocxUploader from './components/DocxUploader.vue';
   <main>
     <DocxUploader />
     <Calendar />
+    <br>
+    <a href="https://www.flaticon.com/free-icons/rowing" title="rowing icons">Rowing icons created by Freepik - Flaticon</a>
   </main>
 </template>
 
