@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { ref, defineProps, defineEmits, watch, onUnmounted, nextTick } from 'vue';
 
 // Define props to receive the event data and visibility flag
 const props = defineProps({
@@ -10,6 +10,9 @@ const props = defineProps({
 // Define emit event to close the popup and to open the document editor
 const emit = defineEmits(['close', 'open-document-editor']);
 
+const popupRef = ref(null);
+let eventListenerActive = false; // Prevent premature event firing
+
 // Close the popup
 const closePopup = () => {
   emit('close');
@@ -19,14 +22,39 @@ const closePopup = () => {
 const openDocumentEditor = () => {
   emit('open-document-editor', props.selectedEvent.docxLink); // Pass the DOCX link
 };
+
+// Click outside handler
+const handleClickOutside = (event) => {
+  if (eventListenerActive && props.isVisible && popupRef.value && !popupRef.value.contains(event.target)) {
+    closePopup();
+  }
+};
+
+// Attach event listener after popup opens
+watch(() => props.isVisible, async (newVal) => {
+  if (newVal) {
+    await nextTick(); // Wait for DOM update
+    setTimeout(() => {
+      eventListenerActive = true;
+      document.addEventListener('click', handleClickOutside);
+    }, 100);
+  } else {
+    document.removeEventListener('click', handleClickOutside);
+  }
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
   <div v-if="props.isVisible" class="event-popup">
-    <div class="popup-content">
-      <h3>{{ props.selectedEvent.title }}</h3>
-      <p><strong>Date:</strong> {{ props.selectedEvent.date }}</p>
-      <p><strong>Doc Text:</strong> "{{ props.selectedEvent.text }}"</p>
+    <div class="popup-content" ref="popupRef">
+      <h3>{{ props.selectedEvent?.title }}</h3>
+      <p><strong>Date:</strong> {{ props.selectedEvent?.date }}</p>
+      <p><strong>Doc Text:</strong> "{{ props.selectedEvent?.text }}"</p>
       <p><strong>Link to DOCX:</strong> 
         <a href="#" @click.prevent="openDocumentEditor">Open DOCX</a>
       </p>
@@ -54,16 +82,6 @@ const openDocumentEditor = () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-}
-
-.popup-content h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.popup-content p {
-  margin: 5px 0;
 }
 
 button {

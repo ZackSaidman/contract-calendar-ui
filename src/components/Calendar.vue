@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, ref, watch, onMounted } from 'vue';
+import { defineProps, ref, watch, onMounted, onUnmounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -23,6 +23,7 @@ const popupVisible = ref(false); // Control visibility of the popup
 const selectedFile = ref(null);  // To store the fetched DOCX file
 const selectedDocumentId = ref(null); // To store document Id
 const isModalVisible = ref(false); // Controls whether the modal is visible
+const popupRef = ref(null); // Reference to the popup
 
 // Initialize the S3 client
 const s3Client = new S3Client({
@@ -169,8 +170,14 @@ const streamToBlob = (stream) => {
 
 // Fetch events on component mount
 onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
   fetchEventsFromDynamoDB();
 });
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
 
 // Handle date click event
 const handleDateClick = (arg) => {
@@ -184,6 +191,13 @@ const handleEventClick = (info) => {
   if (event) {
     selectedEvent.value = event;
     popupVisible.value = true; // Show the popup
+  }
+};
+
+// Function to close popup when clicking outside
+const handleClickOutside = (event) => {
+  if (popupVisible.value && popupRef.value && !popupRef.value.contains(event.target)) {
+    closePopup();
   }
 };
 
@@ -229,7 +243,7 @@ const closePopup = () => {
       :selectedEvent="selectedEvent"
       :isVisible="popupVisible"
       @open-document-editor="openDocumentEditor"
-      @close="closePopup"
+      @close="popupVisible = false"
     />
 
     <!-- Modal with DocumentEditor inside -->
